@@ -11,12 +11,15 @@ import cl.bennu.reports.persistence.dao.*;
 import cl.bennu.reports.persistence.factory.AbstractFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.hssf.util.Region;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 
@@ -183,38 +186,55 @@ public class DynamicReportBusiness {
         }
     }
 
-    public void saveReport(ContextDTO contextDTO, ReportDTO reportDTO) throws Exception {
+    public ReportGenerateResponseEnum saveReport(ContextDTO contextDTO, ReportDTO reportDTO) throws Exception {
+        ReportGenerateResponseEnum responseEnum = ReportGenerateResponseEnum.OK;
+
         try {
-            if (reportDTO.getId() == null) {
-                reportDAO.insert(reportDTO);
-            } else {
-                reportDAO.update(reportDTO);
-            }
-            Long id = reportDTO.getId();
+            if(reportDTO != null) {
+                ValidateSqlDTO validateSqlDTO = validateSql(reportDTO.getSql());
 
-            if (reportDTO.getId() != null) {
-                parameterDAO.deleteByReportId(id);
-            }
+                if(BooleanUtils.isTrue(validateSqlDTO.getValidate())) {
+                    if (reportDTO.getId() == null) {
+                        reportDAO.insert(reportDTO);
+                    } else {
+                        reportDAO.update(reportDTO);
+                    }
 
-            Iterator iter = IteratorUtils.getIterator(reportDTO.getParameterList());
-            ParameterDTO parameterDTO = null;
-            while (iter.hasNext()) {
-                parameterDTO = (ParameterDTO) iter.next();
-                parameterDTO.setReportId(id);
-                if (parameterDTO.getData1() == null) {
-                    parameterDTO.setData1("");
+                    Long id = reportDTO.getId();
+
+                    if (reportDTO.getId() != null) {
+                        parameterDAO.deleteByReportId(id);
+                    }
+
+                    for (Iterator iter = IteratorUtils.getIterator(reportDTO.getParameterList());iter.hasNext();) {
+                        ParameterDTO parameterDTO = (ParameterDTO) iter.next();
+                        parameterDTO.setReportId(id);
+                        if (parameterDTO.getData1() == null) {
+                            parameterDTO.setData1("");
+                        }
+                        if (parameterDTO.getData2() == null) {
+                            parameterDTO.setData2("");
+                        }
+                        parameterDTO.setUpdate(new Date());
+                        parameterDTO.setUpdateUser(contextDTO.getUser());
+
+                        saveParameter(contextDTO, parameterDTO);
+                    }
+                }else{
+                    if(validateSqlDTO == null) {
+                        responseEnum = ReportGenerateResponseEnum.SQL_ERROR;
+                        System.out.println("Error: sql vacio");
+                    }else{
+                        responseEnum = ReportGenerateResponseEnum.SQL_FORBIDDEN;
+                        System.out.println("Error: palabra prohibida '"+validateSqlDTO.getForbiddenWord()+"' encontrada");
+                    }
                 }
-                if (parameterDTO.getData2() == null) {
-                    parameterDTO.setData2("");
-                }
-                parameterDTO.setUpdate(new Date());
-                parameterDTO.setUpdateUser(contextDTO.getUser());
-
-                saveParameter(contextDTO, parameterDTO);
             }
         } catch (Exception e) {
             System.out.println("No se pudo ingresar el parametro");
         }
+
+        return responseEnum;
     }
 
     public List getAllReport(ContextDTO contextDTO) throws Exception {
@@ -226,7 +246,6 @@ public class DynamicReportBusiness {
     }
 
     public void deleteReport(ContextDTO contextDTO, Long reporteId) throws Exception {
-
         //before deleting the report parameters must be removed
         parameterDAO.deleteByReportId(reporteId);
         //now eliminate the report
@@ -281,6 +300,40 @@ public class DynamicReportBusiness {
         logDAO.update(logDTO);
 
         try {
+            ByteArrayOutputStream os = generateXls(list);
+
+            if(os == null){
+                logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.ERROR_GENERATE);
+                logDAO.update(logDTO);
+                return null;
+            }
+
+            Date end = new Date();
+
+            if (now.getTime() + (60 * 1000 * 1) < end.getTime()) {
+                logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.WARM);
+            } else {
+                logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.OK);
+            }
+            logDTO.setEndReport(end);
+            logDAO.update(logDTO);
+
+            return os;
+        } catch (Exception e) {
+            logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.ERROR_GENERATE);
+            logDAO.update(logDTO);
+            return null;
+        }
+    }
+
+    private ByteArrayOutputStream generateXls(List list){
+        if(list == null){
+            return null;
+        }
+
+        ByteArrayOutputStream byteArrayOutputStream = null;
+
+        try{
             HSSFWorkbook workBook = new HSSFWorkbook();
 
             HSSFFont fontTitle = workBook.createFont();
@@ -394,24 +447,58 @@ public class DynamicReportBusiness {
                 i++;
             }
 
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            workBook.write(os);
+            byteArrayOutputStream = new ByteArrayOutputStream();
+            workBook.write(byteArrayOutputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            Date end = new Date();
+        return byteArrayOutputStream;
+    }
 
-            if (now.getTime() + (60 * 1000 * 1) < end.getTime()) {
-                logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.WARM);
-            } else {
-                logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.OK);
-            }
-            logDTO.setEndReport(end);
-            logDAO.update(logDTO);
-
-            return os;
-        } catch (Exception e) {
-            logDTO.setReportGenerateResponseEnum(ReportGenerateResponseEnum.ERROR_GENERATE);
-            logDAO.update(logDTO);
+    private ValidateSqlDTO validateSql(String sql){
+        if(sql == null){
             return null;
         }
+
+        String sqlToSearch = sql.toLowerCase();
+
+        //TODO: CAMBIAR A PROPERTIES
+        List forbiddenWords = new ArrayList();
+        forbiddenWords.add("insert");
+        forbiddenWords.add("update");
+        forbiddenWords.add("delete");
+        forbiddenWords.add("alter");
+        forbiddenWords.add("drop");
+        forbiddenWords.add("create");
+
+        String[] words = sqlToSearch.split("\\s+");
+
+        ValidateSqlDTO validateSqlDTO = null;
+
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+
+            for(Iterator iterator = IteratorUtils.getIterator(forbiddenWords); iterator.hasNext();) {
+                String forbiddenWord = (String) iterator.next();
+                if (sqlToSearch.indexOf(forbiddenWord) != -1) {
+                    validateSqlDTO = new ValidateSqlDTO();
+                    validateSqlDTO.setValidate(Boolean.FALSE);
+                    validateSqlDTO.setForbiddenWord(forbiddenWord);
+                    break;
+                }
+            }
+
+            if(validateSqlDTO != null){
+                break;
+            }
+        }
+
+        if(validateSqlDTO == null){
+            validateSqlDTO = new ValidateSqlDTO();
+            validateSqlDTO.setValidate(Boolean.TRUE);
+        }
+
+        return validateSqlDTO;
     }
 }
