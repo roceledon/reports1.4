@@ -237,9 +237,7 @@ public class DynamicReportBusiness {
         return reportDAO.getByName(name);
     }
 
-    public OutputStream generate(ContextDTO contextDTO, ReportDTO dto) throws Exception {
-        ReportDTO reportDTO = reportDAO.getById(dto.getId());
-        reportDTO.setParameterList(dto.getParameterList());
+    public OutputStream generate(ContextDTO contextDTO, ReportDTO reportDTO) throws Exception {
         ConexionDTO conexionDTO = getConexionById(contextDTO, reportDTO.getConexionId());
 
         String reportTitle = reportDTO.getName();
