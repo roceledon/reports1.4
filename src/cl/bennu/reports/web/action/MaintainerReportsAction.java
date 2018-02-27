@@ -5,6 +5,7 @@ import cl.bennu.reports.commons.dto.ParameterDTO;
 import cl.bennu.reports.commons.dto.ReportDTO;
 import cl.bennu.reports.commons.enums.DateFormatEnum;
 import cl.bennu.reports.commons.enums.ParameterTypeEnum;
+import cl.bennu.reports.commons.enums.ReportGenerateResponseEnum;
 import cl.bennu.reports.web.delegate.DynamicReportDelegate;
 import cl.bennu.reports.web.form.MaintainerReportsForm;
 import net.sf.json.JSONObject;
@@ -121,7 +122,11 @@ public class MaintainerReportsAction extends BaseAction {
 
         reportDTO.setParameterList(parametersList);
 
-        DynamicReportDelegate.getInstance().saveReport(buildContext(request), reportDTO);
+        ReportGenerateResponseEnum responseEnum = DynamicReportDelegate.getInstance().saveReport(buildContext(request), reportDTO);
+
+        if(!ReportGenerateResponseEnum.OK.equals(responseEnum)){
+            request.setAttribute("sqlError",responseEnum.getEnumName());
+        }
 
         //return mapping.findForward(START_MAINTAINER_REPORT);
         return unspecified(mapping, form, request, response);
