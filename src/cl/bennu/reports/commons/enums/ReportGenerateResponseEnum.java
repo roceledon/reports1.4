@@ -2,11 +2,10 @@ package cl.bennu.reports.commons.enums;
 
 import org.apache.commons.lang.enums.ValuedEnum;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
-public class ReportGenerateResponseEnum extends ValuedEnum implements Serializable {
+public class ReportGenerateResponseEnum extends ValuedEnum {
 
 
     public static final ReportGenerateResponseEnum OK = new ReportGenerateResponseEnum("Ok", 1);
@@ -16,7 +15,6 @@ public class ReportGenerateResponseEnum extends ValuedEnum implements Serializab
     public static final ReportGenerateResponseEnum PARAMETER_ERROR = new ReportGenerateResponseEnum("Error en parametros", 5);
     public static final ReportGenerateResponseEnum ERROR_GENERATE = new ReportGenerateResponseEnum("Error generando reporte", 6);
     public static final ReportGenerateResponseEnum UNSUPPORTED_DRIVER = new ReportGenerateResponseEnum("Driver no soportado", 7);
-    public static final ReportGenerateResponseEnum SQL_FORBIDDEN = new ReportGenerateResponseEnum("Palabra prohibida en sql", 8);
 
     protected ReportGenerateResponseEnum(String name, int value) {
         super(name, value);

@@ -3,7 +3,6 @@ package cl.bennu.reports.web.delegate;
 import cl.bennu.reports.business.DynamicReportBusiness;
 import cl.bennu.reports.commons.dto.*;
 import cl.bennu.reports.commons.dto.base.ContextDTO;
-import cl.bennu.reports.commons.enums.ReportGenerateResponseEnum;
 
 import java.io.OutputStream;
 import java.util.List;
@@ -103,8 +102,8 @@ public class DynamicReportDelegate {
         DynamicReportBusiness.getInstance().saveConexion(contextDTO, conexionDTO);
     }
 
-    public ReportGenerateResponseEnum saveReport(ContextDTO contextDTO, ReportDTO reportDTO) throws Exception {
-        return DynamicReportBusiness.getInstance().saveReport(contextDTO, reportDTO);
+    public void saveReport(ContextDTO contextDTO, ReportDTO reportDTO) throws Exception {
+        DynamicReportBusiness.getInstance().saveReport(contextDTO, reportDTO);
     }
 
     public ReportDTO getReport(ContextDTO contextDTO, String name) throws Exception {

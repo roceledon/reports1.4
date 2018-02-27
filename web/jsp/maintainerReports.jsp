@@ -4,7 +4,6 @@
 <%@ taglib prefix="logic" uri="http://jakarta.apache.org/struts/tags-logic" %>
 <%@ taglib prefix="bean" uri="http://jakarta.apache.org/struts/tags-bean" %>
 <%@ taglib prefix="Logic" uri="http://jakarta.apache.org/struts/tags-logic" %>
-<%@ taglib prefix="c" uri="http://jakarta.apache.org/struts/tags-bean" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
@@ -176,8 +175,6 @@
                 Ejemplo:  <strong>$O{valor} WHERE MONTO_PRODUCTO = $P{valor} $O{valor}</strong>
                 <br/><br/>
                 Si se selecciona algun formato de fecha, el programa ingresa automaticamente el primer dia del dia y/o del mes
-                <br/><br/>
-                En el SQL esta prohibido ingresar las siguientes palabras: <strong>insert</strong>, <strong>update</strong>, <strong>delete</strong>, <strong>alter</strong>, <strong>drop</strong> y <strong>create</strong>.
             </p>
         </div>
 
@@ -191,9 +188,3 @@
 </html:form>
 </body>
 </html>
-<script>
-    <logic:present scope="request" name="sqlError">
-    var error = ['<c:write name="sqlError"></c:write>'];
-    Generic.errorDialog(error);
-    </logic:present>
-</script>
