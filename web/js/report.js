@@ -131,7 +131,8 @@ var Report = {
                     } else {
                         Generic.errorDialogMsg(json.message);
                     }
-                }
+                },
+                timeout: 0
             });
 
         } else {
