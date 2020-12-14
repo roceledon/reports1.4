@@ -19,6 +19,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.Executor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,6 +28,9 @@ import java.util.Date;
  * Time: 01:52 PM
  */
 public class ReportImpl extends IbatisUtils implements IReportDAO {
+
+    private final static Executor immediateExecutor = Runnable::run;
+
 
     public List getAll() throws Exception {
         return getSqlMapClient().queryForList("getAllReport", null);
@@ -81,6 +85,7 @@ public class ReportImpl extends IbatisUtils implements IReportDAO {
         try {
             Class.forName(driverBD);
             connection = DriverManager.getConnection(url, user, pass);
+            connection.setNetworkTimeout(immediateExecutor, 600000);
         } catch (Exception e) {
             throw new DriverException(e);
         }
@@ -96,7 +101,7 @@ public class ReportImpl extends IbatisUtils implements IReportDAO {
 
             sqlF = sqlWithParameter;
             preparedStatement = connection.prepareStatement(sqlWithParameter);
-            preparedStatement.setQueryTimeout(3600);
+            preparedStatement.setQueryTimeout(600);
 
             int i = 1;
 
