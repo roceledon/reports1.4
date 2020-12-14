@@ -2,7 +2,6 @@ package cl.bennu.reports.business;
 
 import cl.bennu.reports.commons.dto.*;
 import cl.bennu.reports.commons.dto.base.ContextDTO;
-import cl.bennu.reports.commons.enums.ParameterTypeEnum;
 import cl.bennu.reports.commons.enums.ReportGenerateResponseEnum;
 import cl.bennu.reports.commons.exception.DriverException;
 import cl.bennu.reports.commons.exception.ExecuteException;
@@ -11,12 +10,10 @@ import cl.bennu.reports.persistence.dao.*;
 import cl.bennu.reports.persistence.factory.AbstractFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.hssf.util.Region;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;

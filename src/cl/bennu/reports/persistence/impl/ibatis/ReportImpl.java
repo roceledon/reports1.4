@@ -80,6 +80,7 @@ public class ReportImpl extends IbatisUtils implements IReportDAO {
         Connection connection = null;
         try {
             Class.forName(driverBD);
+            DriverManager.setLoginTimeout(3600);
             connection = DriverManager.getConnection(url, user, pass);
         } catch (Exception e) {
             throw new DriverException(e);
