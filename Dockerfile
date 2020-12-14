@@ -19,3 +19,8 @@ FROM tomcat:9-jdk11-adoptopenjdk-openj9
 LABEL maintainer="bennu <contacto@bennu.cl>"
 COPY --from=build /usr/src/app/build/reports14.war $CATALINA_HOME/webapps/reports14.war
 
+ENV JPDA_ADDRESS="*:8787"
+ENV JPDA_TRANSPORT="dt_socket"
+
+EXPOSE 8080 8787
+ENTRYPOINT ["catalina.sh", "jpda", "run"]
